@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Desktop Pet · 紫色圆球桌宠</title>
+<style>
+  :root { color-scheme: light dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh;
+    font: 15px/1.7 -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: linear-gradient(160deg, #f7f6fb 0%, #efeaf9 60%, #e7e0f7 100%);
+    color: #2b2a35;
+    display: flex; align-items: center; justify-content: center;
+  }
+  main { max-width: 620px; padding: 48px 28px; }
+  h1 { font-size: 26px; margin: 0 0 6px; }
+  p.lead { margin: 0 0 28px; color: #6a6780; }
+  .card {
+    background: #fff; border-radius: 16px; padding: 22px 24px;
+    box-shadow: 0 10px 30px rgba(90, 70, 160, .10);
+  }
+  h2 { font-size: 16px; margin: 0 0 12px; }
+  .row { display: flex; flex-wrap: wrap; gap: 10px; }
+  button {
+    font: inherit; padding: 8px 16px; border-radius: 10px; cursor: pointer;
+    border: 1px solid #ded7f5; background: #f6f3ff; color: #4a3d7a;
+  }
+  button:hover { background: #ece5ff; }
+  code { background: #f2f0f8; padding: 1px 6px; border-radius: 6px; font-size: 13px; }
+  ul { padding-left: 20px; margin: 8px 0 0; color: #55526b; }
+  footer { margin-top: 26px; font-size: 13px; color: #8b87a3; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Desktop Pet</h1>
+  <p class="lead">一只紫色圆球桌宠：眼睛始终盯着鼠标，可以拖动，点击会眨眼，空闲时会随机做小动作。</p>
+
+  <div class="card">
+    <h2>试一试</h2>
+    <div class="row">
+      <button id="blink">眨 眼</button>
+      <button id="look">四处张望</button>
+      <button id="bounce">弹 跳</button>
+      <button id="wiggle">摇 头</button>
+      <button id="reset">回到右下角</button>
+      <button id="remove">移除桌宠</button>
+    </div>
+    <ul>
+      <li>移动鼠标：眼睛跟着你转</li>
+      <li>按住拖动：把球拖到任意位置</li>
+      <li>点击一下：连眨两下眼睛</li>
+      <li>什么都不做：它会自己眨眼、张望、弹跳、摇头</li>
+    </ul>
+  </div>
+
+  <footer>Powered by a single file — <code>standalone/desktop-pet.js</code>，无任何依赖。</footer>
+</main>
+
+<script src="desktop-pet.js"></script>
+<script>
+  var pet = DesktopPet.create({ size: 116, color: '#b28df5' })
+
+  document.getElementById('blink').onclick = function () { pet.blink() }
+  document.getElementById('look').onclick = function () { pet.lookAround() }
+  document.getElementById('bounce').onclick = function () { pet.play('bounce') }
+  document.getElementById('wiggle').onclick = function () { pet.play('wiggle') }
+  document.getElementById('reset').onclick = function () {
+    pet.setPosition(window.innerWidth - 116 - 34, window.innerHeight - 116 - 30)
+  }
+  document.getElementById('remove').onclick = function () {
+    pet.destroy()
+    document.getElementById('remove').disabled = true
+  }
+</script>
+</body>
+</html>
