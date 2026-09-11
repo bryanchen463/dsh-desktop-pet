@@ -42,3 +42,11 @@
 ## 1.0.0 · 开源整理
 - 把 pkg-31 整理为仓库源码：`src/desktop-pet.client.js`（DSH 动态插件）与 `standalone/desktop-pet.js`（无依赖网页版）。
 - 网页版补齐 `size` / `color` / `right` / `bottom` / `idleMin` / `idleMax` 配置、`destroy()` 清理与演示页。
+
+## 1.1.0 · 可安装进任意 DSH 部署
+- 新增 `profile-plugin/`：out-of-tree 客户端插件包（`package.json` 声明 `dsh.client`，
+  `lib/index.js` 为 node 半边，`lib/client.js` 为 `__ModuleLoader__` 懒加载工厂）。
+- 客户端半边改用 Cordis 服务注入 `["slots", "timer"]`，样式与定时器分别由 `ctx.effect`、
+  `ctx.timeout` 持有，随插件行的生命周期回收。
+- README 补上三种引入方式（Web profile 插件 / 动态 Cordis 插件 / 无依赖网页版）与卸载、自定义说明。
+- 实测：DSH `0.1.2-rc.1` + Web profile 下复制插件包并在 `cordis.patch.yml` 插入一行，刷新页面即生效。

@@ -1,6 +1,6 @@
 {
   "name": "dsh-desktop-pet",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "一只紫色圆球桌宠：眼睛始终盯着鼠标，可拖动，点击眨眼，空闲时随机做小动作。DSH 动态 Cordis 插件 + 无依赖网页版。",
   "keywords": [
     "desktop-pet",
@@ -16,6 +16,9 @@
   "files": [
     "standalone/desktop-pet.js",
     "src/desktop-pet.client.js",
+    "profile-plugin/package.json",
+    "profile-plugin/lib/index.js",
+    "profile-plugin/lib/client.js",
     "README.md",
     "LICENSE"
   ],

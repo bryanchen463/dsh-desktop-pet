@@ -1,0 +1,19 @@
+{
+  "name": "dsh-desktop-pet",
+  "version": "1.0.0",
+  "private": true,
+  "description": "紫色圆球桌宠：眼睛始终盯着鼠标，可拖动、点击眨眼、空闲随机动作（DSH Web 客户端的 out-of-tree 插件）",
+  "type": "module",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "client": {
+      "platform": "web",
+      "inject": ["@deepseek-ai/dsh-client-ui-layout"],
+      "immediately": true
+    }
+  }
+}
