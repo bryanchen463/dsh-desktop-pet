@@ -26,13 +26,37 @@
 | 呼吸感 | 常驻的轻微上下浮动，以及每 5.4 秒一次的自动眨眼 |
 | 平面造型 | 纯色球体，无渐变、无内阴影，SVG `<circle>` 保证是正圆 |
 
-## 引入方式
+## 在其他 DSH 部署中使用
 
-### 方式一：安装进 DSH 的 Web profile（推荐，重启后仍在）
+三种引入方式，按「要不要让它一直存在」选：
 
-DSH 的每个 profile 都有一层自己的补丁层 `cordis.patch.yml`，用来插入 out-of-tree 插件行；桌宠是纯浏览器 UI，所以它是一行**客户端插件**行。
+| 方式 | 适用场景 | 生命周期 |
+| --- | --- | --- |
+| 一、profile 插件 | 自己长期用、给团队装机、随 dsh 一起启动 | 跟进程走，**重启后仍在** |
+| 二、动态 Cordis 插件 | 临时试玩、改一行就想立刻看到效果 | 只在当前进程，重启即消失 |
+| 三、无依赖网页版 | 非 DSH 的网页项目 | 页面级 |
 
-**1. 复制插件包**
+### 方式一：安装到任意 DSH 部署（推荐，重启后仍在）
+
+**前置条件**
+
+- 目标是 DSH 的 **Web 界面**（`dsh --profile web`），实测版本 `0.1.2-rc.1`；
+- 有权限写入 `${DSH_HOME:-~/.dsh}/profiles/`（Windows 是 `%USERPROFILE%\.dsh\profiles\`）；
+- 只需要重启该 profile —— **不用改 host 组合、也不用动 agent preset**：桌宠是纯浏览器 UI，落在 profile 补丁层 `cordis.patch.yml` 里的一行**客户端插件**上。
+
+**第 1 步 · 找到 profile 目录**
+
+```bash
+echo "${DSH_HOME:-$HOME/.dsh}"                 # Windows: echo $env:USERPROFILE\.dsh
+ls   "${DSH_HOME:-$HOME/.dsh}/profiles"        # Web 界面的 profile 通常叫 web
+ls   "${DSH_HOME:-$HOME/.dsh}/profiles/web"    # 里面应有 cordis.yml / cordis.patch.yml / plugins/
+```
+
+profile 名不一定是 `web`，以目录里同时存在 `cordis.yml` 与 `cordis.patch.yml` 的那个为准。
+
+**第 2 步 · 把插件包放进 profile 的 `plugins/` 目录**
+
+A. 已经 clone 了本仓库 —— 复制 `profile-plugin/`
 
 ```powershell
 # Windows PowerShell
@@ -52,7 +76,17 @@ cp profile-plugin/lib/index.js  "$profile/plugins/dsh-desktop-pet/lib/index.js"
 cp profile-plugin/lib/client.js "$profile/plugins/dsh-desktop-pet/lib/client.js"
 ```
 
-**2. 在 profile 的补丁层里加一行**
+B. 不想手工拷贝 —— 直接在 `plugins/` 里 clone 本仓库
+
+```bash
+cd "${DSH_HOME:-$HOME/.dsh}/profiles/web/plugins"
+git clone https://github.com/bryanchen463/dsh-desktop-pet.git
+```
+
+这种方式的插件包实际位于 `plugins/dsh-desktop-pet/profile-plugin/`，所以第 3 步的补丁行路径要写成
+`./plugins/dsh-desktop-pet/profile-plugin/lib/index.js`；以后升级只需 `git pull` 再重启 profile。
+
+**第 3 步 · 在 profile 的补丁层插入插件行**
 
 编辑 `${DSH_HOME:-~/.dsh}/profiles/web/cordis.patch.yml`：
 
@@ -62,19 +96,43 @@ cp profile-plugin/lib/client.js "$profile/plugins/dsh-desktop-pet/lib/client.js"
       name: './plugins/dsh-desktop-pet/lib/index.js'
 ```
 
-文件里已经有 `- insert:` 列表时，直接把这两行追加到该列表末尾（保持 4 空格 / 6 空格缩进）。
+- 文件里已经有 `- insert:` 列表时，把 `- id:` / `name:` 两行追加到该列表末尾，缩进保持 4 空格（列表项）与 6 空格（字段）；
+- 路径是**相对 profile 目录**的，必须指向 **node 半边** `lib/index.js`（不是 `client.js`，浏览器半边由它自己托管）；
+- `id` 可以自取，只要不与文件里已有 id 重复；桌宠在浮层内按 `order: 1000` 排序。
 
-**3. 重启该 profile 后刷新页面**
+**第 4 步 · 重启该 profile，然后刷新页面**
 
 ```bash
 dsh --profile web
 ```
 
-桌宠出现在窗口右下角。补丁层是 `patchReload: live` 的，部分环境下保存 `cordis.patch.yml` 后直接刷新页面就已经生效；没出现就重启一次 profile。
+右下角出现紫球。补丁层是 `patchReload: live` 的，部分环境下保存 `cordis.patch.yml` 后直接刷新页面就已生效；没出现就重启一次 profile。
 
-**卸载**：删掉 `plugins/dsh-desktop-pet/` 目录，并删除补丁层里那两行，重启即可。
+**第 5 步 · 确认生效**
 
-**自定义**：球体颜色写在 `profile-plugin/lib/client.js` 的 `circle` 上（`fill: "#b28df5"`），尺寸是文件里的 `SIZE = 116`（眼睛几何用 116 的 viewBox，改 `SIZE` 只缩放不重排）；注册位置在 `ctx.slots.register(...)`，`order` 控制它在浮层里的层级。
+1. 移动鼠标：眼睛跟着转（页面上方、左侧都会看）；
+2. 按住圆球拖动：能拖到任意位置，松开停住；
+3. 点击一下：连眨两下眼睛；
+4. 什么都不做：3–8 秒内会自己眨眼 / 张望 / 弹跳 / 摇头。
+
+注意两点：拖动位置不写盘（插件不做持久化），刷新后回到右下角；想让它对每个新会话都在，用这种方式而不是方式二。
+
+**排查**
+
+| 现象 | 检查 |
+| --- | --- |
+| 刷新后没有紫球 | 补丁行路径是否指向 `lib/index.js`（不是 `client.js`）；是否重启了 profile；浏览器强制刷新（Ctrl+F5） |
+| 启动时报 `client bundle not found` | 目录里必须同时有 `lib/index.js` 与 `lib/client.js`，且 `package.json` 的 `exports["./client"]` 指向后者 |
+| 有紫球但眼睛不动 | `lib/client.js` 顶部的 `inject` 需要 `slots` 与 `timer` 两个客户端服务，别删掉 |
+| 不确定是插件还是旧的动态插件在渲染 | 停掉动态插件后刷新，仍能看到紫球即为插件生效 |
+| 想给另一个 profile 也装上 | 每个 profile 独立，对该 profile 重复第 2–4 步 |
+
+**升级 / 卸载**
+
+- 升级：clone 方式直接 `git pull`；复制方式重新覆盖三个文件；然后重启 profile。
+- 卸载：删除 `plugins/dsh-desktop-pet/` 目录 + 删除补丁层里那两行 + 重启 profile。样式、定时器、监听器都由这一行持有，会一并回收，页面回到原样。
+
+**自定义**：球体颜色在 `profile-plugin/lib/client.js` 里 `circle` 的 `fill: "#b28df5"`；尺寸是文件里的 `SIZE = 116`（眼睛几何基于 116 的 viewBox，改 `SIZE` 只缩放不重排）；浮层里的层级由 `ctx.slots.register(..., { order: 1000 })` 控制。
 
 ### 方式二：动态 Cordis 插件（临时试用）
 
@@ -123,6 +181,7 @@ cordis_run({ pluginId: 'pet-xxx', packageId: 'pkg-xxx', mode: 'run' })
 .
 ├── profile-plugin/             # 方式一：可安装进 dsh Web profile 的插件包
 │   ├── package.json            #   声明 dsh.client（platform: web）
+│   ├── README.md               #   为什么这样就能生效
 │   └── lib/
 │       ├── index.js            #   node 半边：空 apply，只为 Loader 提供一行
 │       └── client.js           #   浏览器半边：__ModuleLoader__ 懒加载工厂
@@ -148,7 +207,7 @@ cordis_run({ pluginId: 'pet-xxx', packageId: 'pkg-xxx', mode: 'run' })
 ## 已验证环境
 
 - DSH `0.1.2-rc.1`，Web profile（`~/.dsh/profiles/web`），Windows。
-- 方式一：复制插件包 + 补丁层插入一行 → 刷新页面后桌宠出现，鼠标追踪、拖动、点击眨眼、随机动作全部正常。
+- 方式一：复制插件包 + 补丁层插入一行 → **停掉同名动态插件后刷新页面，桌宠依然出现**，鼠标追踪、拖动、点击眨眼、随机动作全部正常。
 
 ## 版本历史
 
